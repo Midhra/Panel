@@ -26,6 +26,9 @@ public class Panel {
     static Plan akt;
     static DruckkopfThread druckkopf;
     static MaterialThread material;
+    static int ID = -1;
+    static long startzeit;
+    static Vector<Long> zeiten;
 
     /**
      * @param args the command line arguments
@@ -35,33 +38,62 @@ public class Panel {
         material.start();
         druckkopf = new DruckkopfThread(9998);
         druckkopf.start();
+        zeiten = new Vector<> ();
+        startzeit = 0;
         
-        populateVector();
+        
+        setID();
+        populatePlaene();
         
         while (waehlenPlan()) {
             countFarben();
             print();
+            
+            for (int tmp = 0; tmp < zeiten.size(); tmp++) {
+                System.out.println("[" + tmp + "] " + zeiten.elementAt(tmp));
+            }
         }
-        
+        druckkopf.exit();
+//        druckkopf.stop();
+        material.exit();
+//        material.stop();
     }
     
-    public static void populateVector() {
+    public static void populatePlaene() {
         Auftraege.clear();
-        Auftraege.add(new Plan("Muster"));
-        Auftraege.get(0).addBefehl(new Befehl(1, 0 ,1 , "gruen"));
-        Auftraege.get(0).addBefehl(new Befehl(1, 0 ,2 , "gruen"));
-        Auftraege.get(0).addBefehl(new Befehl(1, 0 ,3 , "gruen"));
-        Auftraege.get(0).addBefehl(new Befehl(2, 0 ,1 , "gruen"));
-        Auftraege.get(0).addBefehl(new Befehl(2, 0 ,2 , "gruen"));
-        Auftraege.get(0).addBefehl(new Befehl(2, 0 ,3 , "gruen"));
-        Auftraege.get(0).addBefehl(new Befehl(3, 0 ,1 , "gruen"));
-        Auftraege.get(0).addBefehl(new Befehl(3, 0 ,2 , "gruen"));
-        Auftraege.get(0).addBefehl(new Befehl(3, 0 ,3 , "gruen"));
-        Auftraege.get(0).addBefehl(new Befehl(1, 1 ,1 , "gelb"));
-        Auftraege.get(0).addBefehl(new Befehl(1, 1 ,2 , "gelb"));
-        Auftraege.get(0).addBefehl(new Befehl(2, 1 ,1 , "gelb"));
-        Auftraege.get(0).addBefehl(new Befehl(2, 1 ,2 , "gelb"));
-        Auftraege.get(0).addBefehl(new Befehl(1, 2 ,1 , "rot"));
+        Auftraege.add (new Plan ("schiefe Pyramide"));
+        Auftraege.get(0).addBefehl (new Befehl (1, 0 ,1 , "gruen"));
+        Auftraege.get(0).addBefehl (new Befehl (1, 0 ,2 , "gruen"));
+        Auftraege.get(0).addBefehl (new Befehl (1, 0 ,3 , "gruen"));
+        Auftraege.get(0).addBefehl (new Befehl (2, 0 ,1 , "gruen"));
+        Auftraege.get(0).addBefehl (new Befehl (2, 0 ,2 , "gruen"));
+        Auftraege.get(0).addBefehl (new Befehl (2, 0 ,3 , "gruen"));
+        Auftraege.get(0).addBefehl (new Befehl (3, 0 ,1 , "gruen"));
+        Auftraege.get(0).addBefehl (new Befehl (3, 0 ,2 , "gruen"));
+        Auftraege.get(0).addBefehl (new Befehl (3, 0 ,3 , "gruen"));
+        Auftraege.get(0).addBefehl (new Befehl (1, 1 ,1 , "gelb"));
+        Auftraege.get(0).addBefehl (new Befehl (1, 1 ,2 , "gelb"));
+        Auftraege.get(0).addBefehl (new Befehl (2, 1 ,1 , "gelb"));
+        Auftraege.get(0).addBefehl (new Befehl (2, 1 ,2 , "gelb"));
+        Auftraege.get(0).addBefehl (new Befehl (1, 2 ,1 , "rot"));
+        
+        Auftraege.add(new Plan ("Ecke"));
+        Auftraege.get(1).addBefehl (new Befehl (1, 0, 1, "rot"));
+        Auftraege.get(1).addBefehl (new Befehl (1, 0, 2, "gelb"));
+        Auftraege.get(1).addBefehl (new Befehl (1, 0, 3, "gruen"));
+        Auftraege.get(1).addBefehl (new Befehl (2, 0, 1, "gelb"));
+        Auftraege.get(1).addBefehl (new Befehl (3, 0, 1, "gruen"));
+        
+        Auftraege.add(new Plan ("Schachbrett"));
+        Auftraege.get(2).addBefehl (new Befehl (1, 0 ,1 , "gruen"));
+        Auftraege.get(2).addBefehl (new Befehl (1, 0 ,2 , "rot"));
+        Auftraege.get(2).addBefehl (new Befehl (1, 0 ,3 , "gruen"));
+        Auftraege.get(2).addBefehl (new Befehl (2, 0 ,1 , "rot"));
+        Auftraege.get(2).addBefehl (new Befehl (2, 0 ,2 , "gruen"));
+        Auftraege.get(2).addBefehl (new Befehl (2, 0 ,3 , "rot"));
+        Auftraege.get(2).addBefehl (new Befehl (3, 0 ,1 , "gruen"));
+        Auftraege.get(2).addBefehl (new Befehl (3, 0 ,2 , "rot"));
+        Auftraege.get(2).addBefehl (new Befehl (3, 0 ,3 , "gruen"));
     }
     
     public static void countFarben() {
@@ -88,21 +120,25 @@ public class Panel {
             auftrag = akt.getName();
         }
         System.out.println("-------------------------------------------------------------------------------");
-        System.out.println("Grün:\t" + gruenMat + " Einheiten\t\tAuftrag:");
-        System.out.println("Rot:\t" + rotMat + " Einheiten\t\t" + auftrag);
-        System.out.println("Gelb:\t" + gelbMat + " Einheiten");
+        System.out.println("Grün:\t" + gruenMat + " Einheiten\t\tDrucker-ID: " + ID);
+        System.out.println("Rot:\t" + rotMat + " Einheiten\t\tAuftrag:" + auftrag);
+        System.out.println("Gelb:\t" + gelbMat + " Einheiten\t\t");
     }
     
     public static boolean waehlenPlan () {
         int index = -1;
         System.out.println("Bitte waehlen Sie einen Plan.");
         for (int tmp = 0; tmp < Auftraege.size(); tmp++) {
-            System.out.println("[" + tmp + "]" + Auftraege.get(tmp).getName());
+            System.out.println("[" + tmp + "] " + Auftraege.get(tmp).getName());
         }
+        System.out.println("[exit] Beenden");
         try {
             BufferedReader br = new BufferedReader (new InputStreamReader (System.in));
             while (index < 0 || index > Auftraege.size()) {
                 String s = br.readLine();
+                if (s.equals("exit")) {
+                    return false;
+                }
                 index = Integer.parseInt(s);
             }
         }
@@ -122,10 +158,12 @@ public class Panel {
             rueckMat = material.checkMat();
         }
         for (int tmp = 0; tmp < akt.getSize(); tmp++) {
+            startzeit = System.currentTimeMillis();
             if (!(sendPrint(akt.getBefehl(tmp)))) {
                 //Fehler beim Druck, daher muss der Befehl wiederholt werden
                 tmp--;
             }
+            zeiten.add(System.currentTimeMillis() - startzeit);
         }
         akt = null;
         infoAnzeige();
@@ -151,11 +189,23 @@ public class Panel {
     
     public static void userError (String error, String loesung) {
         try {
-            System.out.println("\n\n\n\tERROR:\t" + error);
-            System.out.println("\n\t" + loesung);
+            System.out.println("\n\tERROR:\t" + error);
+            System.out.println("\t" + loesung);
             
             BufferedReader reader = new BufferedReader (new InputStreamReader (System.in));
             String input = reader.readLine();
+        }
+        catch (IOException e) {
+            System.out.println(e.getMessage() + '\n');
+        }
+    }
+    
+    public static void setID() {
+        try {
+            System.out.println("Bitte geben Sie die ID des Druckers ein.");
+            BufferedReader reader = new BufferedReader (new InputStreamReader (System.in));
+            String s = reader.readLine();
+            ID = Integer.parseInt(s);
         }
         catch (IOException e) {
             System.out.println(e.getMessage() + '\n');
@@ -188,6 +238,16 @@ public class Panel {
             catch (IOException e) {
                 System.out.println(e.getMessage() + '\n');
                 return -3;
+            }
+        }
+        
+        public void exit () {
+            try {
+                DataOutputStream toPrint = new DataOutputStream (connectionSocket.getOutputStream());
+                toPrint.writeBytes("0,0,0,exit");
+            }
+            catch (IOException e) {
+                System.out.println(e.getMessage() + '\n');
             }
         }
     }
@@ -267,10 +327,10 @@ public class Panel {
                 if (gruenMat < gruenAuftrag) {
                     fuellen = "gruen";
                 }
-                if (rotMat < rotAuftrag) {
+                else if (rotMat < rotAuftrag) {
                     fuellen = "rot";
                 }
-                if (gelbMat < gelbAuftrag) {
+                else if (gelbMat < gelbAuftrag) {
                     fuellen = "gelb";
                 }
                 return fuellen;
@@ -281,7 +341,8 @@ public class Panel {
             }
         }
         
-        public void getMat () {try {
+        public void getMat () {
+            try {
                 BufferedReader fromMat = new BufferedReader (new InputStreamReader (connectionSocket.getInputStream()));
                 DataOutputStream toMat = new DataOutputStream (connectionSocket.getOutputStream());
                 
@@ -298,6 +359,16 @@ public class Panel {
                 gruenMat = Integer.parseInt(parameter[0]);
                 rotMat = Integer.parseInt(parameter[1]);
                 gelbMat = Integer.parseInt(parameter[2]);
+            }
+            catch (IOException e) {
+                System.out.println(e.getMessage() + '\n');
+            }
+        }
+        
+        public void exit () {
+            try {
+                DataOutputStream toMat = new DataOutputStream (connectionSocket.getOutputStream());
+                toMat.writeBytes("exit");
             }
             catch (IOException e) {
                 System.out.println(e.getMessage() + '\n');
