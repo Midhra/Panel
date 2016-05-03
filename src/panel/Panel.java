@@ -62,8 +62,6 @@ public class Panel {
         Auftraege.get(0).addBefehl(new Befehl(2, 1 ,1 , "gelb"));
         Auftraege.get(0).addBefehl(new Befehl(2, 1 ,2 , "gelb"));
         Auftraege.get(0).addBefehl(new Befehl(1, 2 ,1 , "rot"));
-        
-        System.out.println("Vector filled" + '\n');
     }
     
     public static void countFarben() {
@@ -82,16 +80,17 @@ public class Panel {
                 gelbAuftrag++;
             }
         }
-        
-        System.out.println("gruen: " + gruenAuftrag + " rot: " + rotAuftrag + " gelb: " + gelbAuftrag + '\n');
     }
     
     public static void infoAnzeige() {
-        String auftrag = "Muster";
+        String auftrag = "";
+        if (akt != null) {
+            auftrag = akt.getName();
+        }
         System.out.println("-------------------------------------------------------------------------------");
         System.out.println("Grün:\t" + gruenMat + " Einheiten\t\tAuftrag:");
-        System.out.println("Rot:\t" + rotMat + "Einheiten\t\t" + auftrag);
-        System.out.println("Gelb:\t" + gelbMat + "Einheiten");
+        System.out.println("Rot:\t" + rotMat + " Einheiten\t\t" + auftrag);
+        System.out.println("Gelb:\t" + gelbMat + " Einheiten");
     }
     
     public static boolean waehlenPlan () {
@@ -145,6 +144,7 @@ public class Panel {
         }
         
         material.sendUsed(tmp.getFarbe());
+        material.getMat();
         infoAnzeige();
         return true;
     }
