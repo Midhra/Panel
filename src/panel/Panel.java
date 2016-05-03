@@ -5,9 +5,12 @@
  */
 package panel;
 
-
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Vector;
 
 
@@ -16,6 +19,7 @@ import java.util.Vector;
  * @author debian
  */
 public class Panel {
+    static int ID = -1;
     static int gruenMat = 0;
     static int rotMat = 0;
     static int gelbMat = 0;
@@ -24,11 +28,12 @@ public class Panel {
     static int gelbAuftrag = 0;
     static Vector<Plan> Auftraege = new Vector<>();
     static Plan akt;
-    static DruckkopfThread druckkopf;
-    static MaterialThread material;
-    static int ID = -1;
     static long startzeit;
     static Vector<Long> zeiten;
+    static long ping;
+    static Vector<Long> pings;
+    static DruckkopfThread druckkopf;
+    static MaterialThread material;
 
     /**
      * @param args the command line arguments
@@ -40,7 +45,8 @@ public class Panel {
         druckkopf.start();
         zeiten = new Vector<> ();
         startzeit = 0;
-        
+        pings = new Vector<> ();
+        ping = 0;
         
         setID();
         populatePlaene();
@@ -49,9 +55,16 @@ public class Panel {
             countFarben();
             print();
             
+            System.out.println("Laufzeit Befehle:");
             for (int tmp = 0; tmp < zeiten.size(); tmp++) {
                 System.out.println("[" + tmp + "] " + zeiten.elementAt(tmp));
             }
+            System.out.println("Ping Druckkopf:");
+            for (int tmp = 0; tmp < pings.size(); tmp++) {
+                System.out.println("[" + tmp + "] " + pings.elementAt(tmp));
+            }
+            zeiten.clear();
+            pings.clear();
         }
         druckkopf.exit();
 //        druckkopf.stop();
@@ -120,7 +133,7 @@ public class Panel {
             auftrag = akt.getName();
         }
         System.out.println("-------------------------------------------------------------------------------");
-        System.out.println("Grün:\t" + gruenMat + " Einheiten\t\tDrucker-ID: " + ID);
+        System.out.println("Gruen:\t" + gruenMat + " Einheiten\t\tDrucker-ID: " + ID);
         System.out.println("Rot:\t" + rotMat + " Einheiten\t\tAuftrag:" + auftrag);
         System.out.println("Gelb:\t" + gelbMat + " Einheiten\t\t");
     }
@@ -133,9 +146,9 @@ public class Panel {
         }
         System.out.println("[exit] Beenden");
         try {
-            BufferedReader br = new BufferedReader (new InputStreamReader (System.in));
+            BufferedReader reader = new BufferedReader (new InputStreamReader (System.in));
             while (index < 0 || index > Auftraege.size()) {
-                String s = br.readLine();
+                String s = reader.readLine();
                 if (s.equals("exit")) {
                     return false;
                 }
@@ -181,7 +194,7 @@ public class Panel {
                 break;
         }
         
-        material.sendUsed(tmp.getFarbe());
+        material.sendVerbrauch(tmp.getFarbe());
         material.getMat();
         infoAnzeige();
         return true;
@@ -230,8 +243,10 @@ public class Panel {
             try {
                 BufferedReader fromPrint = new BufferedReader (new InputStreamReader (connectionSocket.getInputStream()));
                 DataOutputStream toPrint = new DataOutputStream (connectionSocket.getOutputStream());
+                ping = System.currentTimeMillis();
                 toPrint.writeBytes(Befehl);
                 String antwort = fromPrint.readLine();
+                pings.add(System.currentTimeMillis() - ping);
                 int code = Integer.parseInt(antwort);
                 return code;
             }
@@ -285,7 +300,7 @@ public class Panel {
             }
         }
         
-        public int sendUsed (String farbe) {
+        public int sendVerbrauch (String farbe) {
             try {
                 BufferedReader fromMat = new BufferedReader (new InputStreamReader (connectionSocket.getInputStream()));
                 DataOutputStream toMat = new DataOutputStream (connectionSocket.getOutputStream());
